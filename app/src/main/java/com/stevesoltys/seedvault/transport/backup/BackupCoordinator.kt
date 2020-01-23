@@ -69,6 +69,9 @@ internal class BackupCoordinator(
      */
     fun initializeDevice(): Int {
         Log.i(TAG, "Initialize Device!")
+        // we are not ready to work with backups, do a no-op for now
+        if (getBackupBackoff() != 0L) return TRANSPORT_OK
+
         return try {
             val token = clock.time()
             if (plugin.initializeDevice(token)) {
@@ -83,8 +86,7 @@ internal class BackupCoordinator(
             TRANSPORT_OK
         } catch (e: IOException) {
             Log.e(TAG, "Error initializing device", e)
-            // Show error notification if we were ready for backups
-            if (getBackupBackoff() == 0L) nm.onBackupError()
+            nm.onBackupError()
             TRANSPORT_ERROR
         }
     }
