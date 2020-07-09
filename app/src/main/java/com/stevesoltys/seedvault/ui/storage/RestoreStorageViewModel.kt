@@ -22,6 +22,7 @@ internal class RestoreStorageViewModel(
     override val isRestoreOperation = true
 
     override fun onLocationSet(uri: Uri) {
+        Log.e("TEST", "ON LOCATION SET: $uri")
         viewModelScope.launch(Dispatchers.IO) {
             val hasBackup = try {
                 restorePlugin.hasBackup(uri)
@@ -37,7 +38,8 @@ internal class RestoreStorageViewModel(
                 Log.w(TAG, "Location was rejected: $uri")
 
                 // notify the UI that the location was invalid
-                val errorMsg = app.getString(R.string.restore_invalid_location_message, DIRECTORY_ROOT)
+                val errorMsg =
+                    app.getString(R.string.restore_invalid_location_message, DIRECTORY_ROOT)
                 mLocationChecked.postEvent(LocationResult(errorMsg))
             }
         }

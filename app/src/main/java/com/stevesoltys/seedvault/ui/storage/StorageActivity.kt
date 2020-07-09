@@ -10,6 +10,7 @@ import com.stevesoltys.seedvault.ui.BackupActivity
 import com.stevesoltys.seedvault.ui.INTENT_EXTRA_IS_RESTORE
 import com.stevesoltys.seedvault.ui.INTENT_EXTRA_IS_SETUP_WIZARD
 import com.stevesoltys.seedvault.ui.LiveEventHandler
+import com.stevesoltys.seedvault.ui.REQUEST_CODE_OPEN_DOCUMENT_TREE
 import org.koin.androidx.viewmodel.ext.android.getViewModel
 
 private val TAG = StorageActivity::class.java.name
@@ -48,15 +49,34 @@ class StorageActivity : BackupActivity() {
         })
 
         if (savedInstanceState == null) {
-            showFragment(StorageRootsFragment.newInstance(isRestore()))
+            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+            intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            startActivityForResult(intent, REQUEST_CODE_OPEN_DOCUMENT_TREE)
+//            showFragment(StorageRootsFragment.newInstance(isRestore()))
         }
     }
 
     @CallSuper
     override fun onActivityResult(requestCode: Int, resultCode: Int, result: Intent?) {
         if (resultCode != RESULT_OK) {
-            Log.w(TAG, "Error in activity result: $requestCode")
-            onInvalidLocation(getString(R.string.storage_check_fragment_permission_error))
+            Log.e(TAG, "Error in activity result: $requestCode")
+//            onInvalidLocation(getString(R.string.storage_check_fragment_permission_error))
+        } else if (requestCode == REQUEST_CODE_OPEN_DOCUMENT_TREE) {
+            val uri = result?.data
+            Log.e(TAG, "${result?.data}")
+            viewModel.onStorageRootChosen(StorageRoot(
+                    authority = uri?.authority!!,
+                    rootId = "fake",
+                    documentId = "fake",
+                    icon = null,
+                    title = "Chosen Folder",
+                    summary = null,
+                    availableBytes = null,
+                    isUsb = false,
+                    enabled = true
+            ))
+            viewModel.onUriPermissionGranted(result)
         } else {
             super.onActivityResult(requestCode, resultCode, result)
         }

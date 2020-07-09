@@ -27,7 +27,9 @@ internal class DocumentsProviderRestorePlugin(
     @Throws(IOException::class)
     override suspend fun hasBackup(uri: Uri): Boolean {
         val parent = DocumentFile.fromTreeUri(context, uri) ?: throw AssertionError()
+        Log.e("TEST", "PARENT: ${parent.uri}")
         val rootDir = parent.findFileBlocking(context, DIRECTORY_ROOT) ?: return false
+        Log.e("TEST", "ROOT: ${rootDir.uri}")
         val backupSets = getBackups(context, rootDir)
         return backupSets.isNotEmpty()
     }
