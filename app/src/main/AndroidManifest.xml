@@ -33,6 +33,9 @@
          to allow the user to uninstall an app when storage was not plugged in during install -->
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
 
+    <!--suppress AndroidElementNotAllowed -->
+    <protected-broadcast android:name="android.intent.action.BACKUP_FINISHED" />
+
     <application
         android:name=".App"
         android:allowBackup="false"
@@ -79,6 +82,15 @@
                 <action android:name="android.backup.TRANSPORT_HOST" />
             </intent-filter>
         </service>
+
+        <!-- TODO check permission or process to limit who can call this -->
+        <receiver
+            android:name=".BackupIntentReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BACKUP_FINISHED" />
+            </intent-filter>
+        </receiver>
 
         <receiver
             android:name=".UsbIntentReceiver"
