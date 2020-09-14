@@ -9,6 +9,7 @@ import android.app.backup.BackupTransport.TRANSPORT_OK
 import android.content.pm.PackageInfo
 import android.os.ParcelFileDescriptor
 import android.util.Log
+import com.stevesoltys.seedvault.Clock
 import com.stevesoltys.seedvault.MAGIC_PACKAGE_MANAGER
 import com.stevesoltys.seedvault.crypto.Crypto
 import com.stevesoltys.seedvault.encodeBase64
@@ -17,8 +18,9 @@ import com.stevesoltys.seedvault.header.VersionHeader
 import com.stevesoltys.seedvault.ui.notification.BackupNotificationManager
 import libcore.io.IoUtils.closeQuietly
 import java.io.IOException
+import kotlin.system.measureTimeMillis
 
-class KVBackupState(internal val packageInfo: PackageInfo)
+class KVBackupState(internal val packageInfo: PackageInfo, val start: Long)
 
 const val DEFAULT_QUOTA_KEY_VALUE_BACKUP = (2 * (5 * 1024 * 1024)).toLong()
 
@@ -30,6 +32,7 @@ internal class KVBackup(
     private val inputFactory: InputFactory,
     private val headerWriter: HeaderWriter,
     private val crypto: Crypto,
+    private val clock: Clock,
     private val nm: BackupNotificationManager
 ) {
 
@@ -68,7 +71,7 @@ internal class KVBackup(
 
         // initialize state
         if (this.state != null) throw AssertionError()
-        this.state = KVBackupState(packageInfo)
+        this.state = KVBackupState(packageInfo, clock.time())
 
         // no need for backup when no data has changed
         if (dataNotChanged) return TRANSPORT_OK
@@ -134,7 +137,10 @@ internal class KVBackup(
             }
             val op = (result as Result.Ok).result
             try {
-                storeRecord(packageInfo, op, i++, pmRecordNumber)
+                val time = measureTimeMillis {
+                    storeRecord(packageInfo, op, i++, pmRecordNumber)
+                }
+                Log.v(TAG, "Storing ${packageInfo.packageName} ${op.key} took ${time}ms.")
             } catch (e: IOException) {
                 Log.e(TAG, "Unable to update base64Key file for base64Key ${op.base64Key}", e)
                 // Returning something more forgiving such as TRANSPORT_PACKAGE_REJECTED
@@ -164,16 +170,40 @@ internal class KVBackup(
             Log.e(TAG, "Deleting record with base64Key ${op.base64Key}")
             plugin.deleteRecord(packageInfo, op.base64Key)
         } else {
+            val start = clock.time()
             val outputStream = plugin.getOutputStreamForRecord(packageInfo, op.base64Key)
+            val streamTime = clock.time() - start
+            Log.v(TAG, "Getting OutputStream for ${packageInfo.packageName} ${op.key} took ${streamTime}ms")
             try {
                 val header = VersionHeader(
                     packageName = packageInfo.packageName,
                     key = op.key
                 )
-                headerWriter.writeVersion(outputStream, header)
-                crypto.encryptHeader(outputStream, header)
-                crypto.encryptMultipleSegments(outputStream, op.value)
+                val headerTime = measureTimeMillis {
+                    headerWriter.writeVersion(outputStream, header)
+                }
+                Log.v(TAG, "Writing version for ${packageInfo.packageName} ${op.key} took ${headerTime}ms")
+                val headerCryptTime = measureTimeMillis {
+                    crypto.encryptHeader(outputStream, header)
+                }
+                Log.v(
+                    TAG,
+                    "Encrypting header of ${packageInfo.packageName} ${op.key} took ${headerCryptTime}ms"
+                )
+                val cryptTime = measureTimeMillis {
+                    crypto.encryptMultipleSegments(outputStream, op.value)
+                }
+                Log.v(
+                    TAG,
+                    "Writing header of ${packageInfo.packageName} ${op.key} took ${cryptTime}ms"
+                )
+                val flushTime = measureTimeMillis {
                 outputStream.flush()
+                }
+                Log.v(
+                    TAG,
+                    "Flushing of ${packageInfo.packageName} ${op.key} took ${flushTime}ms"
+                )
             } finally {
                 closeQuietly(outputStream)
             }
@@ -228,7 +258,8 @@ internal class KVBackup(
     }
 
     fun finishBackup(): Int {
-        Log.i(TAG, "Finish K/V Backup of ${state!!.packageInfo.packageName}")
+        val time = clock.time() - state!!.start
+        Log.i(TAG, "Finish K/V Backup of ${state!!.packageInfo.packageName} took ${time}ms")
         state = null
         return TRANSPORT_OK
     }

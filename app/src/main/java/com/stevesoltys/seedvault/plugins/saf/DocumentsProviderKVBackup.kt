@@ -70,8 +70,15 @@ internal class DocumentsProviderKVBackup(
         }
         val packageFile = this.packageFile ?: throw AssertionError()
         packageFile.assertRightFile(packageInfo)
+        val start = System.currentTimeMillis()
         val keyFile = packageFile.createOrGetFile(context, key)
-        return storage.getOutputStream(keyFile)
+        val keyFileTime = System.currentTimeMillis() - start
+        Log.v("KVBackup", "Getting file for ${packageInfo.packageName} $key took ${keyFileTime}ms")
+        val streamStart = System.currentTimeMillis()
+        val outputStream = storage.getOutputStream(keyFile)
+        val streamTime = System.currentTimeMillis() - streamStart
+        Log.v("KVBackup", "openOutputStream() for ${packageInfo.packageName} $key took ${streamTime}ms")
+        return outputStream
     }
 
 }

@@ -178,8 +178,11 @@ internal suspend fun DocumentFile.createOrGetFile(
     name: String,
     mimeType: String = MIME_TYPE
 ): DocumentFile {
+    val start = System.currentTimeMillis()
     return findFileBlocking(context, name) ?: createFile(mimeType, name)?.apply {
         check(this.name == name) { "File named ${this.name}, but should be $name" }
+        val time = System.currentTimeMillis() - start
+        Log.v("KVBackup", "DocumentFile.createOrGetFile() for $name took ${time}ms")
     } ?: throw IOException()
 }
 
@@ -259,6 +262,7 @@ internal fun getTreeDocumentFile(parent: DocumentFile, context: Context, uri: Ur
  * so there is no point in trying to optimize the query by not listing all children.
  */
 suspend fun DocumentFile.findFileBlocking(context: Context, displayName: String): DocumentFile? {
+    val start = System.currentTimeMillis()
     val files = try {
         listFilesBlocking(context)
     } catch (e: IOException) {
@@ -266,8 +270,13 @@ suspend fun DocumentFile.findFileBlocking(context: Context, displayName: String)
         return null
     }
     for (doc in files) {
-        if (displayName == doc.name) return doc
+        if (displayName == doc.name) return doc.apply {
+            val time = System.currentTimeMillis() - start
+            Log.v("KVBackup", "Finding $displayName took ${time}ms")
+        }
     }
+    val time = System.currentTimeMillis() - start
+    Log.v("KVBackup", "Not finding $displayName took ${time}ms")
     return null
 }
 
