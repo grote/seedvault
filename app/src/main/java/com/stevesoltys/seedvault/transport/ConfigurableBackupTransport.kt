@@ -1,6 +1,7 @@
 package com.stevesoltys.seedvault.transport
 
 import android.app.backup.BackupAgent.FLAG_CLIENT_SIDE_ENCRYPTION_ENABLED
+import android.app.backup.BackupAgent.FLAG_DEVICE_TO_DEVICE_TRANSFER
 import android.app.backup.BackupTransport
 import android.app.backup.RestoreDescription
 import android.app.backup.RestoreSet
@@ -52,7 +53,9 @@ class ConfigurableBackupTransport internal constructor(private val context: Cont
      * This allows the agent to decide what to do based on properties of the transport.
      */
     override fun getTransportFlags(): Int {
-        return FLAG_CLIENT_SIDE_ENCRYPTION_ENABLED
+        // Since there seems to be consensus in the community to pose as device to device transport,
+        // we are pretending to be one here. This will backup opt-out apps that target API 30.
+        return FLAG_CLIENT_SIDE_ENCRYPTION_ENABLED or FLAG_DEVICE_TO_DEVICE_TRANSFER
     }
 
     /**
