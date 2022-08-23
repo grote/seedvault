@@ -6,7 +6,6 @@ import android.content.pm.ApplicationInfo.FLAG_ALLOW_BACKUP
 import android.content.pm.ApplicationInfo.FLAG_INSTALLED
 import android.content.pm.PackageInfo
 import android.content.pm.SigningInfo
-import android.os.SystemClock
 import android.util.Log
 import com.stevesoltys.seedvault.Clock
 import com.stevesoltys.seedvault.MAGIC_PACKAGE_MANAGER
@@ -38,12 +37,13 @@ internal abstract class TransportTest {
 
     protected val sigInfo: SigningInfo = mockk()
     protected val token = Random.nextLong()
+    protected val applicationInfo = mockk<ApplicationInfo> {
+        flags = FLAG_ALLOW_BACKUP or FLAG_INSTALLED
+    }
     protected val packageInfo = PackageInfo().apply {
         packageName = "org.example"
         longVersionCode = Random.nextLong()
-        applicationInfo = ApplicationInfo().apply {
-            flags = FLAG_ALLOW_BACKUP or FLAG_INSTALLED
-        }
+        applicationInfo = this@TransportTest.applicationInfo
         signingInfo = sigInfo
     }
     protected val pmPackageInfo = PackageInfo().apply {
@@ -73,8 +73,6 @@ internal abstract class TransportTest {
         every { Log.w(any(), ofType(String::class), any()) } returns 0
         every { Log.e(any(), any()) } returns 0
         every { Log.e(any(), any(), any()) } returns 0
-        mockkStatic(SystemClock::class)
-        every { SystemClock.uptimeMillis() } returns 0L
     }
 
 }
