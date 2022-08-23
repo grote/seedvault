@@ -6,6 +6,7 @@ import android.content.pm.ApplicationInfo.FLAG_ALLOW_BACKUP
 import android.content.pm.ApplicationInfo.FLAG_INSTALLED
 import android.content.pm.PackageInfo
 import android.content.pm.SigningInfo
+import android.os.SystemClock
 import android.util.Log
 import com.stevesoltys.seedvault.Clock
 import com.stevesoltys.seedvault.MAGIC_PACKAGE_MANAGER
@@ -72,6 +73,8 @@ internal abstract class TransportTest {
         every { Log.w(any(), ofType(String::class), any()) } returns 0
         every { Log.e(any(), any()) } returns 0
         every { Log.e(any(), any(), any()) } returns 0
+        mockkStatic(SystemClock::class)
+        every { SystemClock.uptimeMillis() } returns 0L
     }
 
 }
