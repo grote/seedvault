@@ -11,6 +11,8 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.GET_INSTRUMENTATION
 import android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.TIRAMISU
 import android.os.RemoteException
 import android.os.UserHandle
 import android.util.Log
@@ -38,7 +40,7 @@ internal class PackageService(
         @WorkerThread
         @Throws(RemoteException::class)
         get() {
-            val packages = packageManager.getInstalledPackages(0)
+            val packages = packageManager.getInstalledPackagesCompat(0)
                 .map { packageInfo -> packageInfo.packageName }
                 .sorted()
 
@@ -71,7 +73,7 @@ internal class PackageService(
         get() {
             // We need the GET_SIGNING_CERTIFICATES flag here,
             // because the package info is used by [ApkBackup] which needs signing info.
-            return packageManager.getInstalledPackages(GET_SIGNING_CERTIFICATES)
+            return packageManager.getInstalledPackagesCompat(GET_SIGNING_CERTIFICATES)
                 .filter { packageInfo ->
                     packageInfo.doesNotGetBackedUp() && // only apps that do not allow backup
                         !packageInfo.isNotUpdatedSystemApp() && // and are not vanilla system apps
@@ -93,16 +95,17 @@ internal class PackageService(
      */
     val userApps: List<PackageInfo>
         @WorkerThread
-        get() = packageManager.getInstalledPackages(GET_INSTRUMENTATION).filter { packageInfo ->
-            packageInfo.isUserVisible(context) && packageInfo.allowsBackup()
-        }
+        get() = packageManager.getInstalledPackagesCompat(GET_INSTRUMENTATION)
+            .filter { packageInfo ->
+                packageInfo.isUserVisible(context) && packageInfo.allowsBackup()
+            }
 
     /**
      * A list of apps that does not allow backup.
      */
     val userNotAllowedApps: List<PackageInfo>
         @WorkerThread
-        get() = packageManager.getInstalledPackages(0).filter { packageInfo ->
+        get() = packageManager.getInstalledPackagesCompat(0).filter { packageInfo ->
             !packageInfo.allowsBackup() && !packageInfo.isSystemApp()
         }
 
@@ -111,7 +114,7 @@ internal class PackageService(
         get() {
             var appsTotal = 0
             var appsOptOut = 0
-            packageManager.getInstalledPackages(GET_INSTRUMENTATION).forEach { packageInfo ->
+            packageManager.getInstalledPackagesCompat(GET_INSTRUMENTATION).forEach { packageInfo ->
                 if (packageInfo.isUserVisible(context)) {
                     appsTotal++
                     if (packageInfo.doesNotGetBackedUp()) {
@@ -131,6 +134,14 @@ internal class PackageService(
     private fun logPackages(packages: List<String>) {
         packages.chunked(LOG_MAX_PACKAGES).forEach {
             Log.i(TAG, it.toString())
+        }
+    }
+
+    private fun PackageManager.getInstalledPackagesCompat(flags: Int): MutableList<PackageInfo> {
+        return if (SDK_INT >= TIRAMISU) {
+            getInstalledPackages(PackageManager.PackageInfoFlags.of(flags.toLong()))
+        } else {
+            @Suppress("DEPRECATION") getInstalledPackages(flags)
         }
     }
 
