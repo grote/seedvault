@@ -4,6 +4,10 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.GET_SIGNATURES
 import android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES
+import android.os.UserManager
+import android.os.UserManager.DISALLOW_INSTALL_APPS
+import android.os.UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES
+import android.os.UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES_GLOBALLY
 import android.util.Log
 import com.stevesoltys.seedvault.crypto.Crypto
 import com.stevesoltys.seedvault.metadata.ApkSplit
@@ -34,9 +38,20 @@ internal class ApkRestore(
     private val crypto: Crypto,
     private val splitCompatChecker: ApkSplitCompatibilityChecker,
     private val apkInstaller: ApkInstaller,
+    private val userManager: UserManager,
 ) {
 
     private val pm = context.packageManager
+
+    fun UserManager.checkRestriction(restriction: String): Boolean {
+        return this.userRestrictions.getBoolean(restriction, false)
+    }
+
+    private fun isAllowedToInstallApks(): Boolean {
+        return userManager.checkRestriction(DISALLOW_INSTALL_APPS) ||
+            userManager.checkRestriction(DISALLOW_INSTALL_UNKNOWN_SOURCES) ||
+            userManager.checkRestriction(DISALLOW_INSTALL_UNKNOWN_SOURCES_GLOBALLY)
+    }
 
     @Suppress("BlockingMethodInNonBlockingContext")
     fun restore(backup: RestorableBackup) = flow {
@@ -45,7 +60,7 @@ internal class ApkRestore(
             // We also need to exclude the DocumentsProvider used to retrieve backup data.
             // Otherwise, it gets killed when we install it, terminating our restoration.
             val isStorageProvider = it.key == storagePlugin.providerPackageName
-            it.value.hasApk() && !isStorageProvider
+            it.value.hasApk() && !isStorageProvider && !isAllowedToInstallApks()
         }
         val total = packages.size
         var progress = 0

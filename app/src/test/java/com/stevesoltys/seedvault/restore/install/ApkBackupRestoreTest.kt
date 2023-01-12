@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.pm.Signature
 import android.graphics.drawable.Drawable
+import android.os.UserManager
 import android.util.PackageUtils
 import com.stevesoltys.seedvault.assertReadEquals
 import com.stevesoltys.seedvault.getRandomString
@@ -52,6 +53,7 @@ internal class ApkBackupRestoreTest : TransportTest() {
     private val storagePlugin: StoragePlugin = mockk()
     private val splitCompatChecker: ApkSplitCompatibilityChecker = mockk()
     private val apkInstaller: ApkInstaller = mockk()
+    private val userManager: UserManager = mockk()
 
     private val apkBackup = ApkBackup(pm, crypto, settingsManager, metadataManager)
     private val apkRestore: ApkRestore = ApkRestore(
@@ -60,7 +62,8 @@ internal class ApkBackupRestoreTest : TransportTest() {
         legacyStoragePlugin = legacyStoragePlugin,
         crypto = crypto,
         splitCompatChecker = splitCompatChecker,
-        apkInstaller = apkInstaller
+        apkInstaller = apkInstaller,
+        userManager = userManager
     )
 
     private val signatureBytes = byteArrayOf(0x01, 0x02, 0x03)
@@ -87,6 +90,10 @@ internal class ApkBackupRestoreTest : TransportTest() {
     private val splitOutputStream = ByteArrayOutputStream()
     private val outputStreamGetter: suspend (name: String) -> OutputStream = { name ->
         if (name == this.name) outputStream else splitOutputStream
+    }
+
+    fun UserManager.checkRestriction(restriction: String): Boolean {
+        return this.userRestrictions.getBoolean(restriction, false)
     }
 
     init {
@@ -152,6 +159,7 @@ internal class ApkBackupRestoreTest : TransportTest() {
                 )
             )
         }
+        every { userManager.checkRestriction(any()) } returns false
 
         val backup = RestorableBackup(metadata.copy(packageMetadataMap = packageMetadataMap))
         apkRestore.restore(backup).collectIndexed { i, value ->
