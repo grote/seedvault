@@ -4,10 +4,6 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.GET_SIGNATURES
 import android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES
-import android.os.UserManager
-import android.os.UserManager.DISALLOW_INSTALL_APPS
-import android.os.UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES
-import android.os.UserManager.DISALLOW_INSTALL_UNKNOWN_SOURCES_GLOBALLY
 import android.util.Log
 import com.stevesoltys.seedvault.crypto.Crypto
 import com.stevesoltys.seedvault.metadata.ApkSplit
@@ -15,6 +11,7 @@ import com.stevesoltys.seedvault.metadata.PackageMetadata
 import com.stevesoltys.seedvault.plugins.LegacyStoragePlugin
 import com.stevesoltys.seedvault.plugins.StoragePlugin
 import com.stevesoltys.seedvault.restore.RestorableBackup
+import com.stevesoltys.seedvault.restore.install.ApkInstallState.FAILED
 import com.stevesoltys.seedvault.restore.install.ApkInstallState.FAILED_SYSTEM_APP
 import com.stevesoltys.seedvault.restore.install.ApkInstallState.IN_PROGRESS
 import com.stevesoltys.seedvault.restore.install.ApkInstallState.QUEUED
@@ -38,20 +35,10 @@ internal class ApkRestore(
     private val crypto: Crypto,
     private val splitCompatChecker: ApkSplitCompatibilityChecker,
     private val apkInstaller: ApkInstaller,
-    private val userManager: UserManager,
+    private val installRestriction: InstallRestriction,
 ) {
 
     private val pm = context.packageManager
-
-    fun UserManager.checkRestriction(restriction: String): Boolean {
-        return this.userRestrictions.getBoolean(restriction, false)
-    }
-
-    private fun isAllowedToInstallApks(): Boolean {
-        return userManager.checkRestriction(DISALLOW_INSTALL_APPS) ||
-            userManager.checkRestriction(DISALLOW_INSTALL_UNKNOWN_SOURCES) ||
-            userManager.checkRestriction(DISALLOW_INSTALL_UNKNOWN_SOURCES_GLOBALLY)
-    }
 
     @Suppress("BlockingMethodInNonBlockingContext")
     fun restore(backup: RestorableBackup) = flow {
@@ -60,8 +47,9 @@ internal class ApkRestore(
             // We also need to exclude the DocumentsProvider used to retrieve backup data.
             // Otherwise, it gets killed when we install it, terminating our restoration.
             val isStorageProvider = it.key == storagePlugin.providerPackageName
-            it.value.hasApk() && !isStorageProvider && !isAllowedToInstallApks()
+            it.value.hasApk() && !isStorageProvider
         }
+        val isAllowedToInstallApks = installRestriction.isAllowedToInstallApks()
         val total = packages.size
         var progress = 0
 
@@ -72,11 +60,17 @@ internal class ApkRestore(
             installResult[packageName] = ApkInstallResult(
                 packageName = packageName,
                 progress = progress,
-                state = QUEUED,
+                state = if (isAllowedToInstallApks) QUEUED else FAILED,
                 installerPackageName = metadata.installer
             )
         }
-        emit(installResult)
+        if (isAllowedToInstallApks) {
+            emit(installResult)
+        } else {
+            installResult.isFinished = true
+            emit(installResult)
+            return@flow
+        }
 
         // re-install individual packages and emit updates
         for ((packageName, metadata) in packages) {

@@ -8,6 +8,9 @@ val installModule = module {
     factory { ApkInstaller(androidContext()) }
     factory { DeviceInfo(androidContext()) }
     factory { ApkSplitCompatibilityChecker(get()) }
-    factory { ApkRestore(androidContext(), get(), get(), get(), get(), get(),
-        androidContext().getSystemService(UserManager::class.java)) }
+    factory {
+        ApkRestore(androidContext(), get(), get(), get(), get(), get()) {
+            androidContext().getSystemService(UserManager::class.java).isAllowedToInstallApks()
+        }
+    }
 }
