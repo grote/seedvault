@@ -22,6 +22,8 @@ import com.stevesoltys.seedvault.settings.SettingsManager
 import com.stevesoltys.seedvault.ui.notification.BackupNotificationManager
 import java.io.Closeable
 import java.io.EOFException
+import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
@@ -140,6 +142,12 @@ internal class FullBackup(
             outputStream.write(ByteArray(1) { VERSION })
             crypto.newEncryptingStream(outputStream, getADForFull(VERSION, state.packageName))
         } // this lambda is only called before we actually write backup data the first time
+
+        // val suffix = this.toString().split('@')[1]
+        // getDedupStream(suffix).use {
+        //     it.write("\n\n\n$packageName $token $flags\n".toByteArray())
+        // }
+
         return TRANSPORT_OK
     }
 
@@ -174,6 +182,24 @@ internal class FullBackup(
             val payload = ByteArray(numBytes)
             val read = state.inputStream.read(payload, 0, numBytes)
             if (read != numBytes) throw EOFException("Read $read bytes instead of $numBytes.")
+
+            val suffix = this.toString().split('@')[1]
+            // state.chunker.getChunkFingerprints(payload) { fingerprint, chunkStart, chunkEnd, chunk ->
+            //     val md5 = chunk.toByteString().md5().hex()
+            //     getDedupStream(suffix).use {
+            //         it.write("  $fingerprint $chunkStart $chunkEnd ${chunk.size} $md5\n".toByteArray())
+            //     }
+            // }
+            // full tar stream
+            getDedupStream("${state.packageName}-$suffix").use {
+                it.write(payload)
+            }
+            // // system chunk hashes
+            // val md5 = payload.toByteString().md5().hex()
+            // getDedupStream(this.toString().split('@')[1]).use {
+            //     it.write("  $numBytes $md5\n".toByteArray())
+            // }
+
             outputStream.write(payload)
             TRANSPORT_OK
         } catch (e: IOException) {
@@ -228,4 +254,9 @@ internal class FullBackup(
         Log.w(TAG, "Error closing: ", e)
     }
 
+}
+
+fun getDedupStream(name: String): OutputStream {
+    val file = File("/sdcard/.SeedVaultAndroidBackup/0/", name)
+    return FileOutputStream(file, true)
 }
