@@ -23,6 +23,7 @@ import android.util.Log
 import androidx.annotation.WorkerThread
 import com.stevesoltys.seedvault.Clock
 import com.stevesoltys.seedvault.MAGIC_PACKAGE_MANAGER
+import com.stevesoltys.seedvault.MemoryLogger
 import com.stevesoltys.seedvault.metadata.BackupType
 import com.stevesoltys.seedvault.metadata.MetadataManager
 import com.stevesoltys.seedvault.metadata.PackageState
@@ -362,6 +363,8 @@ internal class BackupCoordinator(
             check(!full.hasState()) {
                 "K/V backup has state, but full backup has dangling state as well"
             }
+            // log memory stats
+            MemoryLogger.log(context)
             // getCurrentPackage() not-null because we have state, call before finishing
             val packageInfo = kv.getCurrentPackage()!!
             val packageName = packageInfo.packageName
@@ -387,6 +390,8 @@ internal class BackupCoordinator(
             check(!kv.hasState()) {
                 "Full backup has state, but K/V backup has dangling state as well"
             }
+            // log memory stats
+            MemoryLogger.log(context)
             // getCurrentPackage() not-null because we have state
             val packageInfo = full.getCurrentPackage()!!
             val packageName = packageInfo.packageName

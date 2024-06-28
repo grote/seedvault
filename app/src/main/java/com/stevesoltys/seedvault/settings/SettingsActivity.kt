@@ -5,10 +5,12 @@
 
 package com.stevesoltys.seedvault.settings
 
+import android.annotation.CallSuper
 import android.os.Bundle
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceFragmentCompat.OnPreferenceStartFragmentCallback
+import com.stevesoltys.seedvault.MemoryLogger
 import com.stevesoltys.seedvault.R
 import com.stevesoltys.seedvault.ui.RequireProvisioningActivity
 import com.stevesoltys.seedvault.ui.RequireProvisioningViewModel
@@ -57,6 +59,12 @@ class SettingsActivity : RequireProvisioningActivity(), OnPreferenceStartFragmen
                 if (fragment?.isVisible == true) supportFragmentManager.popBackStack()
             }
         }
+    }
+
+    @CallSuper
+    override fun onResume() {
+        super.onResume()
+        MemoryLogger.log(applicationContext)
     }
 
     override fun onPreferenceStartFragment(

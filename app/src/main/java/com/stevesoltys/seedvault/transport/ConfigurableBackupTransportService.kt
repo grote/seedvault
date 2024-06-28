@@ -10,6 +10,7 @@ import android.app.backup.IBackupManager
 import android.content.Intent
 import android.os.IBinder
 import android.util.Log
+import com.stevesoltys.seedvault.MemoryLogger
 import com.stevesoltys.seedvault.crypto.KeyManager
 import com.stevesoltys.seedvault.ui.notification.BackupNotificationManager
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -61,6 +62,10 @@ class ConfigurableBackupTransportService : Service(), KoinComponent {
         notificationManager.onServiceDestroyed()
         transport = null
         mIsRunning.value = false
+
+        // log memory stats
+        MemoryLogger.logFull(applicationContext)
+
         Log.d(TAG, "Service destroyed.")
     }
 
