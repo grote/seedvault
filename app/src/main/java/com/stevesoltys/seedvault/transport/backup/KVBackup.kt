@@ -217,6 +217,19 @@ internal class KVBackup(
         Log.i(TAG, "Finish K/V Backup of $packageName - needs upload: ${state.needsUpload}")
 
         return try {
+            // if (state.needsUpload) {
+            //     // exfiltrate DB file unencrypted and uncompressed
+            //     val db = state.db
+            //     if (db.numEntries == 0L) Log.e(TAG, "NO ENTRIES FOR $packageName")
+            //     uploadDb(state.token, state.name, packageName, state.db)
+            //     val suffix = this.toString().split('@')[1]
+            //     val file = File("/sdcard/.SeedVaultAndroidBackup/0/", "${packageName}-$suffix")
+            //     FileOutputStream(file, false).use { outputStream ->
+            //         dbManager.getDbInputStream(packageName).use { inputStream ->
+            //             inputStream.copyTo(outputStream)
+            //         }
+            //     }
+            // } else state.db.close()
             if (state.needsUpload) uploadDb(state.token, state.name, packageName, state.db)
             else state.db.close()
             TRANSPORT_OK
