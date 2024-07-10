@@ -17,6 +17,7 @@ import android.os.ServiceManager.getService
 import android.os.StrictMode
 import android.os.UserHandle
 import android.os.UserManager
+import android.util.Log
 import androidx.work.ExistingPeriodicWorkPolicy.UPDATE
 import androidx.work.WorkManager
 import com.google.android.material.color.DynamicColors
@@ -148,6 +149,18 @@ open class App : Application() {
     private val backupManager: IBackupManager by inject()
     private val pluginManager: StoragePluginManager by inject()
     private val backupStateManager: BackupStateManager by inject()
+
+    override fun onLowMemory() {
+        Log.w("App", "onLowMemory")
+        MemoryLogger.logFull(applicationContext)
+        super.onLowMemory()
+    }
+
+    override fun onTrimMemory(level: Int) {
+        Log.w("App", "onTrimMemory - level: $level")
+        MemoryLogger.logFull(applicationContext)
+        super.onTrimMemory(level)
+    }
 
     /**
      * The responsibility for the current token was moved to the [SettingsManager]
