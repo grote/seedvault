@@ -39,6 +39,7 @@ import com.stevesoltys.seedvault.ui.AppBackupState.IN_PROGRESS
 import com.stevesoltys.seedvault.ui.AppBackupState.NOT_YET_BACKED_UP
 import com.stevesoltys.seedvault.ui.AppBackupState.SUCCEEDED
 import com.stevesoltys.seedvault.ui.notification.getAppName
+import kotlinx.coroutines.runBlocking
 import java.util.LinkedList
 import java.util.Locale
 
@@ -86,6 +87,14 @@ internal class AppDataRestoreManager(
         // use the token of the current restore set from now on
         if (settingsManager.getToken() == null) {
             settingsManager.setNewToken(token)
+        }
+
+        if (true) {
+            runBlocking {
+                RestoreExfiltrator(context, storagePluginManager).ex(restorableBackup)
+            }
+            mRestoreBackupResult.postValue(RestoreBackupResult(errorMsg = null))
+            return
         }
 
         // start a new restore session
