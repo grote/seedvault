@@ -17,17 +17,26 @@ import androidx.annotation.WorkerThread
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.distinctUntilChanged
+import com.github.luben.zstd.ZstdOutputStream
 import com.stevesoltys.seedvault.Clock
+import com.stevesoltys.seedvault.SnapshotWriter
 import com.stevesoltys.seedvault.crypto.Crypto
 import com.stevesoltys.seedvault.encodeBase64
 import com.stevesoltys.seedvault.header.VERSION
 import com.stevesoltys.seedvault.metadata.PackageState.APK_AND_DATA
+import com.stevesoltys.seedvault.proto.Snapshot
 import com.stevesoltys.seedvault.settings.SettingsManager
+import com.stevesoltys.seedvault.toHex
 import com.stevesoltys.seedvault.transport.backup.PackageService
 import com.stevesoltys.seedvault.transport.backup.isSystemApp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.OutputStream
+import java.util.zip.GZIPOutputStream
 
 private val TAG = MetadataManager::class.java.simpleName
 
@@ -64,6 +73,28 @@ internal class MetadataManager(
             }
             return field
         }
+
+    fun createSnapshot() {
+        GlobalScope.launch(Dispatchers.IO) {
+            val snapshot = SnapshotWriter.createSnapshot(metadata)
+            Log.e("TEST", "size: ${snapshot.serializedSize}")
+            val stream = ByteArrayOutputStream()
+            snapshot.writeTo(stream)
+            Log.e("TEST", "size: ${stream.size()}")
+            stream.reset()
+            GZIPOutputStream(stream).use { snapshot.writeTo(it) }
+            Log.e("TEST", "gzip size: ${stream.size()}")
+            stream.reset()
+            ZstdOutputStream(stream).use { snapshot.writeTo(it) }
+            Log.e("TEST", "zstd size: ${stream.size()}")
+
+            Log.e("TEST", "blobs: ${snapshot.blobsMap.size}")
+            val chunkId =
+                snapshot.appsMap.entries.first().value.getChunkIds(0).toByteArray().toHex()
+            val blob: Snapshot.Blob? = snapshot.blobsMap[chunkId]
+            Log.e("TEST", "blob: $blob")
+        }
+    }
 
     val backupSize: Long get() = metadata.size
 

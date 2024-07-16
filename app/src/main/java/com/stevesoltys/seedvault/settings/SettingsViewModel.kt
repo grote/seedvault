@@ -38,6 +38,7 @@ import androidx.work.WorkManager
 import com.stevesoltys.seedvault.BackupStateManager
 import com.stevesoltys.seedvault.R
 import com.stevesoltys.seedvault.crypto.KeyManager
+import com.stevesoltys.seedvault.metadata.BackupMetadata
 import com.stevesoltys.seedvault.metadata.MetadataManager
 import com.stevesoltys.seedvault.permitDiskReads
 import com.stevesoltys.seedvault.plugins.StoragePluginManager
@@ -78,6 +79,8 @@ internal class SettingsViewModel(
     private val backupInitializer: BackupInitializer,
     backupStateManager: BackupStateManager,
 ) : RequireProvisioningViewModel(app, settingsManager, keyManager, pluginManager) {
+
+    fun createSnapshot() = metadataManager.createSnapshot()
 
     private val contentResolver = app.contentResolver
     private val connectivityManager: ConnectivityManager? =

@@ -163,6 +163,8 @@ dependencies {
     implementation(libs.google.protobuf.kotlin.lite)
     implementation(libs.google.tink.android)
 
+    implementation("com.github.luben:zstd-jni:1.5.6-3@aar")
+
     /**
      * Storage Dependencies
      */
