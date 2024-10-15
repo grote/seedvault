@@ -41,6 +41,8 @@
     <string name="settings_backup_status_next_backup_past">once conditions are fulfilled</string>
     <string name="settings_backup_status_next_backup_usb">Backups will happen automatically when you plug in your USB drive</string>
     <string name="settings_backup_scheduling_title">Backup scheduling</string>
+    <string name="settings_backup_app_check_title">Check integrity</string>
+    <string name="settings_backup_app_check_summary">Ensure that backup is working for restore</string>
     <string name="settings_backup_exclude_apps">Exclude apps</string>
     <string name="settings_backup_now">Backup now</string>
     <string name="settings_category_storage">Storage backup (beta)</string>
@@ -65,6 +67,12 @@
     <string name="settings_scheduling_category_conditions_title">Conditions</string>
     <string name="settings_scheduling_metered_title">Back up when using mobile data</string>
     <string name="settings_scheduling_charging_title">Back up only when charging</string>
+
+    <string name="settings_app_check_title">Verify app backup integrity</string>
+    <string name="settings_app_check_text">Each backup process will automatically check the backup integrity. However, to save time, actual app data will not be downloaded and verified.</string>
+    <string name="settings_app_check_text2">Here you can run a one-time check to verify your app backup. Select how much of the app data should be downloaded for the check. The more you select, the longer it will take, yet the more reliable the check will be. This will run in the background and show a notification once the check is done.</string>
+    <string name="settings_app_check_warning">Warning: Downloading large amounts of data can take a long time.</string>
+    <string name="settings_app_check_button">Check backup</string>
 
     <string name="settings_expert_title">Expert settings</string>
     <string name="settings_expert_logcat_title">Save app log</string>

@@ -38,6 +38,7 @@ import com.stevesoltys.seedvault.R
 import com.stevesoltys.seedvault.backend.BackendManager
 import com.stevesoltys.seedvault.crypto.KeyManager
 import com.stevesoltys.seedvault.permitDiskReads
+import com.stevesoltys.seedvault.repo.Checker
 import com.stevesoltys.seedvault.storage.StorageBackupJobService
 import com.stevesoltys.seedvault.ui.LiveEvent
 import com.stevesoltys.seedvault.ui.MutableLiveEvent
@@ -69,6 +70,7 @@ internal class SettingsViewModel(
     private val appListRetriever: AppListRetriever,
     private val storageBackup: StorageBackup,
     private val backupManager: IBackupManager,
+    private val checker: Checker,
     backupStateManager: BackupStateManager,
 ) : RequireProvisioningViewModel(app, settingsManager, keyManager, backendManager) {
 
@@ -83,6 +85,9 @@ internal class SettingsViewModel(
     val isBackupRunning: StateFlow<Boolean>
     private val mBackupPossible = MutableLiveData(false)
     val backupPossible: LiveData<Boolean> = mBackupPossible
+
+    private val mBackupSize = MutableLiveData<Long>()
+    val backupSize: LiveData<Long> = mBackupSize
 
     internal val lastBackupTime = settingsManager.lastBackupTime
     internal val appBackupWorkInfo =
@@ -306,6 +311,12 @@ internal class SettingsViewModel(
 
     fun cancelFilesBackup() {
         BackupJobService.cancelJob(app)
+    }
+
+    fun loadBackupSize() {
+        viewModelScope.launch(Dispatchers.IO) {
+            mBackupSize.postValue(checker.getBackupSize())
+        }
     }
 
     fun onLogcatUriReceived(uri: Uri?) = viewModelScope.launch(Dispatchers.IO) {
