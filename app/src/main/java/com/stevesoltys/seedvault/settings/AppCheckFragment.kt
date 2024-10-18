@@ -58,7 +58,8 @@ class AppCheckFragment : Fragment() {
         }
 
         v.requireViewById<Button>(R.id.startButton).setOnClickListener {
-
+            viewModel.checkAppBackups(slider.value.toInt())
+            requireActivity().onBackPressedDispatcher.onBackPressed()
         }
         return v
     }

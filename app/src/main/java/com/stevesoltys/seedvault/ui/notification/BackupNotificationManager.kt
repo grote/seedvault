@@ -42,6 +42,7 @@ private const val CHANNEL_ID_ERROR = "NotificationError"
 private const val CHANNEL_ID_RESTORE = "NotificationRestore"
 private const val CHANNEL_ID_RESTORE_ERROR = "NotificationRestoreError"
 private const val CHANNEL_ID_PRUNING = "NotificationPruning"
+private const val CHANNEL_ID_CHECKING = "NotificationChecking"
 internal const val NOTIFICATION_ID_OBSERVER = 1
 private const val NOTIFICATION_ID_SUCCESS = 2
 private const val NOTIFICATION_ID_ERROR = 3
@@ -49,7 +50,8 @@ private const val NOTIFICATION_ID_SPACE_ERROR = 4
 internal const val NOTIFICATION_ID_RESTORE = 5
 private const val NOTIFICATION_ID_RESTORE_ERROR = 6
 internal const val NOTIFICATION_ID_PRUNING = 7
-private const val NOTIFICATION_ID_NO_MAIN_KEY_ERROR = 8
+internal const val NOTIFICATION_ID_CHECKING = 8
+private const val NOTIFICATION_ID_NO_MAIN_KEY_ERROR = 9
 
 private val TAG = BackupNotificationManager::class.java.simpleName
 
@@ -62,6 +64,7 @@ internal class BackupNotificationManager(private val context: Context) {
         createNotificationChannel(getRestoreChannel())
         createNotificationChannel(getRestoreErrorChannel())
         createNotificationChannel(getPruningChannel())
+        createNotificationChannel(getCheckingChannel())
     }
 
     private fun getObserverChannel(): NotificationChannel {
@@ -96,6 +99,11 @@ internal class BackupNotificationManager(private val context: Context) {
     private fun getPruningChannel(): NotificationChannel {
         val title = context.getString(R.string.notification_pruning_channel_title)
         return NotificationChannel(CHANNEL_ID_PRUNING, title, IMPORTANCE_LOW)
+    }
+
+    private fun getCheckingChannel(): NotificationChannel {
+        val title = context.getString(R.string.notification_checking_channel_title)
+        return NotificationChannel(CHANNEL_ID_CHECKING, title, IMPORTANCE_LOW)
     }
 
     /**
@@ -314,12 +322,22 @@ internal class BackupNotificationManager(private val context: Context) {
     }
 
     fun getPruningNotification(): Notification {
-        return Builder(context, CHANNEL_ID_OBSERVER).apply {
+        return Builder(context, CHANNEL_ID_PRUNING).apply {
             setSmallIcon(R.drawable.ic_auto_delete)
             setContentTitle(context.getString(R.string.notification_pruning_title))
             setOngoing(true)
             setShowWhen(false)
             priority = PRIORITY_LOW
+            foregroundServiceBehavior = FOREGROUND_SERVICE_IMMEDIATE
+        }.build()
+    }
+
+    fun getCheckNotification(): Notification {
+        return Builder(context, CHANNEL_ID_CHECKING).apply {
+            setSmallIcon(R.drawable.ic_cloud_search)
+            setContentTitle(context.getString(R.string.notification_checking_title))
+            setOngoing(true)
+            setShowWhen(false)
             foregroundServiceBehavior = FOREGROUND_SERVICE_IMMEDIATE
         }.build()
     }
