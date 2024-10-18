@@ -8,6 +8,7 @@ package com.stevesoltys.seedvault.repo
 import androidx.annotation.WorkerThread
 import com.stevesoltys.seedvault.backend.BackendManager
 import com.stevesoltys.seedvault.crypto.Crypto
+import kotlinx.coroutines.delay
 import org.calyxos.seedvault.core.backends.AppBackupFileType
 import org.calyxos.seedvault.core.backends.TopLevelFolder
 
@@ -34,6 +35,11 @@ internal class Checker(
             snapshot.blobsMap.forEach { (chunkId, blob) -> sizeMap[chunkId] = blob.length }
         }
         return sizeMap.values.sumOf { it.toLong() }
+    }
+
+    suspend fun check(percent: Int) {
+        check(percent in 0..100) { "Percent $percent out of bounds." }
+        delay(20_000)
     }
 
 }

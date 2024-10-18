@@ -58,7 +58,7 @@ class AppCheckFragment : Fragment() {
         }
 
         v.requireViewById<Button>(R.id.startButton).setOnClickListener {
-
+            viewModel.checkAppBackups(slider.value.toInt())
         }
         return v
     }

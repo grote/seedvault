@@ -45,6 +45,7 @@ import com.stevesoltys.seedvault.ui.MutableLiveEvent
 import com.stevesoltys.seedvault.ui.RequireProvisioningViewModel
 import com.stevesoltys.seedvault.worker.AppBackupWorker
 import com.stevesoltys.seedvault.worker.AppBackupWorker.Companion.UNIQUE_WORK_NAME
+import com.stevesoltys.seedvault.worker.AppCheckerWorker
 import com.stevesoltys.seedvault.worker.BackupRequester.Companion.requestFilesAndAppBackup
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -318,6 +319,10 @@ internal class SettingsViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             mBackupSize.postValue(checker.getBackupSize())
         }
+    }
+
+    fun checkAppBackups(percent: Int) {
+        AppCheckerWorker.scheduleNow(app, percent)
     }
 
     fun onLogcatUriReceived(uri: Uri?) = viewModelScope.launch(Dispatchers.IO) {
