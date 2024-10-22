@@ -21,5 +21,5 @@ val repoModule = module {
     }
     factory { SnapshotCreatorFactory(androidContext(), get(), get(), get()) }
     factory { Pruner(get(), get(), get()) }
-    single { Checker(get(), get(), get()) }
+    single { Checker(get(), get(), get(), get()) }
 }
