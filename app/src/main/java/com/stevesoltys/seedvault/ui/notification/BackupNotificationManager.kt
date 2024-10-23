@@ -332,14 +332,20 @@ internal class BackupNotificationManager(private val context: Context) {
         }.build()
     }
 
-    fun getCheckNotification(): Notification {
-        return Builder(context, CHANNEL_ID_CHECKING).apply {
-            setSmallIcon(R.drawable.ic_cloud_search)
-            setContentTitle(context.getString(R.string.notification_checking_title))
-            setOngoing(true)
-            setShowWhen(false)
-            foregroundServiceBehavior = FOREGROUND_SERVICE_IMMEDIATE
-        }.build()
+    fun getCheckNotification() = Builder(context, CHANNEL_ID_CHECKING).apply {
+        setSmallIcon(R.drawable.ic_cloud_search)
+        setContentTitle(context.getString(R.string.notification_checking_title))
+        setOngoing(true)
+        setShowWhen(false)
+        foregroundServiceBehavior = FOREGROUND_SERVICE_IMMEDIATE
+    }
+
+    fun showCheckNotification(text: String, thousandth: Int) {
+        val notification = getCheckNotification()
+            .setContentText(text)
+            .setProgress(1000, thousandth, false)
+            .build()
+        nm.notify(NOTIFICATION_ID_CHECKING, notification)
     }
 
     @SuppressLint("RestrictedApi")

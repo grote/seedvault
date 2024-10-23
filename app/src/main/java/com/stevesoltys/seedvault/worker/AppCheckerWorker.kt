@@ -76,7 +76,7 @@ class AppCheckerWorker(
 
     private fun createForegroundInfo() = ForegroundInfo(
         NOTIFICATION_ID_CHECKING,
-        nm.getCheckNotification(),
+        nm.getCheckNotification().build(),
         FOREGROUND_SERVICE_TYPE_DATA_SYNC,
     )
 }
