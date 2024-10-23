@@ -18,7 +18,7 @@ import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager.NameNotFoundException
-import android.text.format.Formatter
+import android.text.format.Formatter.formatShortFileSize
 import android.util.Log
 import androidx.core.app.NotificationCompat.Action
 import androidx.core.app.NotificationCompat.Builder
@@ -51,7 +51,8 @@ internal const val NOTIFICATION_ID_RESTORE = 5
 private const val NOTIFICATION_ID_RESTORE_ERROR = 6
 internal const val NOTIFICATION_ID_PRUNING = 7
 internal const val NOTIFICATION_ID_CHECKING = 8
-private const val NOTIFICATION_ID_NO_MAIN_KEY_ERROR = 9
+internal const val NOTIFICATION_ID_CHECK_FINISHED = 9
+private const val NOTIFICATION_ID_NO_MAIN_KEY_ERROR = 10
 
 private val TAG = BackupNotificationManager::class.java.simpleName
 
@@ -195,7 +196,7 @@ internal class BackupNotificationManager(private val context: Context) {
     }
 
     fun onBackupSuccess(numBackedUp: Int, total: Int, size: Long) {
-        val sizeStr = Formatter.formatShortFileSize(context, size)
+        val sizeStr = formatShortFileSize(context, size)
         val contentText =
             context.getString(R.string.notification_success_text, numBackedUp, total, sizeStr)
         val intent = Intent(context, SettingsActivity::class.java).apply {
@@ -340,12 +341,28 @@ internal class BackupNotificationManager(private val context: Context) {
         foregroundServiceBehavior = FOREGROUND_SERVICE_IMMEDIATE
     }
 
-    fun showCheckNotification(text: String, thousandth: Int) {
+    fun showCheckNotification(speed: Long, thousandth: Int) {
+        val text = "${formatShortFileSize(context, speed)}/s"
         val notification = getCheckNotification()
             .setContentText(text)
             .setProgress(1000, thousandth, false)
             .build()
         nm.notify(NOTIFICATION_ID_CHECKING, notification)
+    }
+
+    fun onCheckComplete(size: Long, speed: Long) {
+        val text = context.getString(
+            R.string.notification_checking_finished_text,
+            formatShortFileSize(context, size),
+            "${formatShortFileSize(context, speed)}/s",
+        )
+        val notification = Builder(context, CHANNEL_ID_CHECKING)
+            .setContentTitle(context.getString(R.string.notification_checking_finished_title))
+            .setContentText(text)
+            .setSmallIcon(R.drawable.ic_cloud_done)
+            .build()
+        nm.cancel(NOTIFICATION_ID_CHECKING)
+        nm.notify(NOTIFICATION_ID_CHECK_FINISHED, notification)
     }
 
     @SuppressLint("RestrictedApi")

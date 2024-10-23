@@ -189,6 +189,8 @@
 
     <string name="notification_checking_channel_title">App backup integrity check</string>
     <string name="notification_checking_title">Checking app backups…</string>
+    <string name="notification_checking_finished_title">App backup integrity confirmed</string>
+    <string name="notification_checking_finished_text">Successfully checked %1$s at an average speed of %2$s.</string>
 
     <!-- App Backup and Restore State -->
 

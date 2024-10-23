@@ -92,11 +92,10 @@ internal class Checker(
                     // only log/show notification after some time has passed (throttling)
                     if (passedTime > lastNotification.get() + 500) {
                         lastNotification.set(passedTime)
-                        val bandwidth =
-                            (newSize / 1024 / (passedTime.toDouble() / 1000)).roundToInt()
+                        val bandwidth = (newSize / (passedTime.toDouble() / 1000)).roundToLong()
                         val thousandth = ((newSize.toDouble() / sampleSize) * 1000).roundToInt()
                         log.debug { "$thousandth‰ - $bandwidth KB/sec - $newSize bytes" }
-                        nm.showCheckNotification("$bandwidth KB/sec", thousandth)
+                        nm.showCheckNotification(bandwidth, thousandth)
                     }
                 }
             }
@@ -104,6 +103,9 @@ internal class Checker(
         if (sampleSize != size.get()) log.error {
             "Checked ${size.get()} bytes, but expected $sampleSize"
         }
+        val passedTime = System.currentTimeMillis() - startTime
+        val bandwidth = size.get() / (passedTime.toDouble() / 1000).roundToLong()
+        nm.onCheckComplete(size.get(), bandwidth)
     }
 
     private fun getBlobSample(snapshots: List<Snapshot>, percent: Int): Map<String, Blob> {
