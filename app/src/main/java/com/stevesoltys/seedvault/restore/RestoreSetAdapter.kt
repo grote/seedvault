@@ -22,7 +22,7 @@ import com.stevesoltys.seedvault.restore.RestoreSetAdapter.RestoreSetViewHolder
 import com.stevesoltys.seedvault.transport.restore.RestorableBackup
 
 internal class RestoreSetAdapter(
-    private val listener: RestorableBackupClickListener,
+    private val listener: RestorableBackupClickListener?,
     private val items: List<RestorableBackup>,
 ) : Adapter<RestoreSetViewHolder>() {
 
@@ -46,7 +46,9 @@ internal class RestoreSetAdapter(
         private val timeView = v.requireViewById<TextView>(R.id.timeView)
 
         internal fun bind(item: RestorableBackup) {
-            v.setOnClickListener { listener.onRestorableBackupClicked(item) }
+            if (listener != null) {
+                v.setOnClickListener { listener.onRestorableBackupClicked(item) }
+            }
             titleView.text = item.name
 
             appView.text = if (item.sizeAppData > 0) {

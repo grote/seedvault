@@ -27,7 +27,6 @@ import kotlin.math.min
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
-@WorkerThread
 internal class Checker(
     private val crypto: Crypto,
     private val backendManager: BackendManager,
@@ -43,7 +42,10 @@ internal class Checker(
             // TODO determine also based on backendManager
             return Runtime.getRuntime().availableProcessors()
         }
+    var checkerResult: CheckerResult? = null
+        private set
 
+    @WorkerThread
     suspend fun getBackupSize(): Long {
         // get all snapshots
         val folder = TopLevelFolder(crypto.repoId)
@@ -63,6 +65,7 @@ internal class Checker(
         return sizeMap.values.sumOf { it.toLong() }
     }
 
+    @WorkerThread
     suspend fun check(percent: Int) {
         check(percent in 0..100) { "Percent $percent out of bounds." }
 
@@ -106,6 +109,14 @@ internal class Checker(
         val passedTime = System.currentTimeMillis() - startTime
         val bandwidth = size.get() / (passedTime.toDouble() / 1000).roundToLong()
         nm.onCheckComplete(size.get(), bandwidth)
+        checkerResult = CheckerResult.Success(snapshots, percent, size.get())
+        this.snapshots = null
+    }
+
+    fun clear() {
+        log.info { "Clearing..." }
+        snapshots = null
+        checkerResult = null
     }
 
     private fun getBlobSample(snapshots: List<Snapshot>, percent: Int): Map<String, Blob> {

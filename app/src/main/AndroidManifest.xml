@@ -131,6 +131,11 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".ui.check.AppCheckResultActivity"
+            android:label="@string/notification_checking_finished_title"
+            android:launchMode="singleTask"/>
+
         <service
             android:name=".transport.ConfigurableBackupTransportService"
             android:exported="false">

@@ -189,8 +189,13 @@
 
     <string name="notification_checking_channel_title">App backup integrity check</string>
     <string name="notification_checking_title">Checking app backups…</string>
-    <string name="notification_checking_finished_title">App backup integrity confirmed</string>
+    <string name="notification_checking_finished_title">App backup integrity verified</string>
     <string name="notification_checking_finished_text">Successfully checked %1$s at an average speed of %2$s.</string>
+    <string name="notification_checking_action">Details</string>
+
+    <string name="backup_app_check_success_intro">%1$d snapshots were found and %2$d%% of their data (%3$s) successfully verified:</string>
+    <string name="backup_app_check_success_disclaimer">Note: We can not verify whether apps include all of their data in the backup.</string>
+    <string name="backup_app_check_error_no_snapshots">We could not find any backup. Please run a successful backup first and then try checking again.</string>
 
     <!-- App Backup and Restore State -->
 
