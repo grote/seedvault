@@ -18,6 +18,7 @@ import android.content.pm.PackageManager
 import android.content.pm.PackageManager.GET_INSTRUMENTATION
 import android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES
 import android.content.pm.PackageManager.MATCH_SYSTEM_ONLY
+import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
 import android.content.pm.ResolveInfo
 import android.os.RemoteException
 import android.util.Log
@@ -49,7 +50,7 @@ internal class PackageService(
         @WorkerThread
         @Throws(RemoteException::class)
         get() {
-            val packages = packageManager.getInstalledPackages(0)
+            val packages = packageManager.getInstalledPackages(MATCH_UNINSTALLED_PACKAGES)
                 .map { packageInfo -> packageInfo.packageName }
                 .sorted()
 
@@ -81,7 +82,8 @@ internal class PackageService(
         get() {
             // We need the GET_SIGNING_CERTIFICATES flag here,
             // because the package info is used by [ApkBackup] which needs signing info.
-            return packageManager.getInstalledPackages(GET_SIGNING_CERTIFICATES)
+            val flags = GET_SIGNING_CERTIFICATES or MATCH_UNINSTALLED_PACKAGES
+            return packageManager.getInstalledPackages(flags)
                 .filter { packageInfo -> // only apps that are:
                     !packageInfo.isNotUpdatedSystemApp() && // not vanilla system apps
                         packageInfo.packageName != context.packageName // not this app
@@ -97,7 +99,8 @@ internal class PackageService(
         get() {
             // We need the GET_SIGNING_CERTIFICATES flag here,
             // because the package info is used by [ApkBackup] which needs signing info.
-            return packageManager.getInstalledPackages(GET_SIGNING_CERTIFICATES)
+            val flags = GET_SIGNING_CERTIFICATES or MATCH_UNINSTALLED_PACKAGES
+            return packageManager.getInstalledPackages(flags)
                 .filter { packageInfo ->
                     packageInfo.doesNotGetBackedUp() && // only apps that do not allow backup
                         !packageInfo.isNotUpdatedSystemApp() && // and are not vanilla system apps
